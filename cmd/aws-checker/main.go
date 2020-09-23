@@ -1,17 +1,13 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"io/ioutil"
+	"github.com/wizedkyle/securitybot/pkg/slackstructs"
 	"log"
-	"net/http"
-	"os"
 	"time"
 )
 
@@ -154,8 +150,37 @@ func analyseAccessKeys() {
 		i++
 	}
 
-	for i, acessKey := range accessKeysToRotate {
+	for i, accessKey := range accessKeysToRotate {
 		var slackMessage slackstructs.SlackAWSCredCheckerStyle
+		var slackMessageBlock slackstructs.SlackAWSCredCheckerBlock
+
+		slackMessageBlock.HeaderType = "header"
+		slackMessageBlock.HeaderText.Type = "plain_text"
+		slackMessageBlock.HeaderText.Text = ":exclamation: You have AWS Access Keys that need to be rotated :exclamation:"
+		slackMessageBlock.HeaderText.Emoji = true
+
+		slackMessageBlock.SectionType = "section"
+		slackMessageBlock.SectionText.Type = "mrkdwn"
+		slackMessageBlock.SectionText.Text = "The Access Key *" + accessKey.AccessKeyId + "* is older than 1 year. What would you like to do?"
+
+		slackMessageBlock.ActionType = "actions"
+		slackMessageBlock.ActionElements.Type = "button"
+		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
+		slackMessageBlock.ActionElements.ElementText.Text = "Rotate Access Key"
+		slackMessageBlock.ActionElements.ElementText.Emoji = true
+		slackMessageBlock.ActionElements.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:rotate}"
+		slackMessageBlock.ActionElements.Type = "button"
+		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
+		slackMessageBlock.ActionElements.ElementText.Text = "Delete Access Key"
+		slackMessageBlock.ActionElements.ElementText.Emoji = true
+		slackMessageBlock.ActionElements.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:delete}"
+		slackMessageBlock.ActionElements.Type = "button"
+		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
+		slackMessageBlock.ActionElements.ElementText.Text = "Ignore Me"
+		slackMessageBlock.ActionElements.ElementText.Emoji = true
+		slackMessageBlock.ActionElements.Value = "{action:nothing}"
+
+		slackMessage.Blocks = append(slackMessage.Blocks, slackMessageBlock)
 
 		i++
 	}
