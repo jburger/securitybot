@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -164,24 +165,32 @@ func analyseAccessKeys() {
 		slackMessageBlock.SectionText.Text = "The Access Key *" + accessKey.AccessKeyId + "* is older than 1 year. What would you like to do?"
 
 		slackMessageBlock.ActionType = "actions"
-		slackMessageBlock.ActionElements.Type = "button"
-		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
-		slackMessageBlock.ActionElements.ElementText.Text = "Rotate Access Key"
-		slackMessageBlock.ActionElements.ElementText.Emoji = true
-		slackMessageBlock.ActionElements.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:rotate}"
-		slackMessageBlock.ActionElements.Type = "button"
-		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
-		slackMessageBlock.ActionElements.ElementText.Text = "Delete Access Key"
-		slackMessageBlock.ActionElements.ElementText.Emoji = true
-		slackMessageBlock.ActionElements.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:delete}"
-		slackMessageBlock.ActionElements.Type = "button"
-		slackMessageBlock.ActionElements.ElementText.Type = "plain_text"
-		slackMessageBlock.ActionElements.ElementText.Text = "Ignore Me"
-		slackMessageBlock.ActionElements.ElementText.Emoji = true
-		slackMessageBlock.ActionElements.Value = "{action:nothing}"
 
+		var rotateKeyButton slackstructs.SlackAWSCredCheckerActionBlock
+		rotateKeyButton.Type = "button"
+		rotateKeyButton.ElementText.Type = "plain_text"
+		rotateKeyButton.ElementText.Text = "Rotate Access Key"
+		rotateKeyButton.ElementText.Emoji = true
+		rotateKeyButton.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:rotate}"
+		slackMessageBlock.ActionElements = append(slackMessageBlock.ActionElements, rotateKeyButton)
+
+		var deleteKeyButton slackstructs.SlackAWSCredCheckerActionBlock
+		deleteKeyButton.Type = "button"
+		deleteKeyButton.ElementText.Type = "plain_text"
+		deleteKeyButton.ElementText.Text = "Delete Access Key"
+		deleteKeyButton.ElementText.Emoji = true
+		deleteKeyButton.Value = "{username:" + accessKey.UserName + ",accesskey:" + accessKey.AccessKeyId + ",action:delete}"
+		slackMessageBlock.ActionElements = append(slackMessageBlock.ActionElements, deleteKeyButton)
+
+		var ignoreButton slackstructs.SlackAWSCredCheckerActionBlock
+		ignoreButton.Type = "button"
+		ignoreButton.ElementText.Type = "plain_text"
+		ignoreButton.ElementText.Text = "Ignore Me"
+		ignoreButton.ElementText.Emoji = true
+		ignoreButton.Value = "{action:nothing}"
 		slackMessage.Blocks = append(slackMessage.Blocks, slackMessageBlock)
 
+		slackPostBody, _ := json.Marshal(slackMessage)
 		i++
 	}
 	// Create a DM with each user who's keys need to be rotated

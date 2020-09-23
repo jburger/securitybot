@@ -6,7 +6,8 @@ import (
 
 func GetSlackOAuthToken() string {
 	oauthToken := os.Getenv("SlackOAuthToken")
-	return oauthToken
+	bearerToken := "Bearer " + oauthToken
+	return bearerToken
 }
 
 func ValidateSlackRequest() {
